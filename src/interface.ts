@@ -38,4 +38,5 @@ export interface MultiAPILinkConfig {
    * eg: with `@api(name: 'v1')` directive in your query, an initial typename `Project` would become `v1:Project`
    */
   prefixTypenames?: boolean
+  defaultEndpoint?: string
 }

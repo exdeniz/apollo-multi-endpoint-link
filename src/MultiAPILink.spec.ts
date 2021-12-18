@@ -32,6 +32,13 @@ const queryB = gql`
     }
   }
 `
+const queryC = gql`
+  query {
+    queryToC {
+      data
+    }
+  }
+`
 
 describe('MultiAPILink', () => {
   beforeEach(() => {
@@ -51,6 +58,7 @@ describe('MultiAPILink', () => {
         ])
       ),
       createHttpLink: () => createHttpLink(),
+      defaultEndpoint: 'b',
     })
 
     const queryAResponse = await toPromise(
@@ -63,8 +71,14 @@ describe('MultiAPILink', () => {
         query: queryB,
       })
     )
+    const queryCResponse = await toPromise(
+      execute(link, {
+        query: queryC,
+      })
+    )
 
     expect(queryAResponse.data).toEqual(ENDPOINTS_CONFIG.a.response)
     expect(queryBResponse.data).toEqual(ENDPOINTS_CONFIG.b.response)
+    expect(queryCResponse.data).toEqual(ENDPOINTS_CONFIG.b.response)
   })
 })

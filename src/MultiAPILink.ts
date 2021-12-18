@@ -31,7 +31,10 @@ export class MultiAPILink extends ApolloLink {
   }
 
   public request(operation: Operation, forward?: NextLink) {
-    if (!hasDirectives(['api'], operation.query)) {
+    if (
+      !hasDirectives(['api'], operation.query) &&
+      !this.config.defaultEndpoint
+    ) {
       return forward?.(operation) ?? null
     }
 
@@ -52,7 +55,6 @@ export class MultiAPILink extends ApolloLink {
         apiName = operation.getContext()[contextKey]
       }
     }
-
     const query = removeDirectivesFromDocument(
       [{ name: 'api', remove: true }],
       operation.query
@@ -63,7 +65,6 @@ export class MultiAPILink extends ApolloLink {
     }
 
     operation.query = query
-
     if (this.config.getContext) {
       operation.setContext(
         this.config.getContext(apiName, operation.getContext)
@@ -76,8 +77,15 @@ export class MultiAPILink extends ApolloLink {
           this.config.httpSuffix ?? '/graphql'
         }`,
       })
-    } else if (process.env.NODE_ENV === 'dev') {
-      throw new Error(`${apiName} is not defined in endpoints definitions`)
+    } else if (this.config.defaultEndpoint) {
+      operation.setContext({
+        uri: `${this.config.endpoints[this.config.defaultEndpoint]}${
+          this.config.httpSuffix ?? '/graphql'
+        }`,
+      })
+      if (process.env.NODE_ENV === 'dev') {
+        throw new Error(`${apiName} is not defined in endpoints definitions`)
+      }
     }
 
     const definition = getMainDefinition(operation.query)
